@@ -1,0 +1,137 @@
+#
+# Copyright 2024-2026 Bundesdruckerei GmbH
+# For the license see the accompanying file LICENSE.MD.
+#
+
+openapi: 3.0.3
+info:
+  x-api-id: 1fc017bc-70a2-11f1-8dca-00155d059d79
+  x-audience: component-internal
+  title: PID Master Token Lifecycle API
+  description: API for managing the lifecycle status of PID Master Tokens
+  version: 0.2.0
+
+paths:
+  /pid-master-token/lifecycle:
+    post:
+      summary: Submit PID Master Token lifecycle information
+      description: |
+        Submits relevant lifecycle information for a PID Master Token including:
+        - Unique ID
+        - Expiration date & time
+        - Pseudonym
+        - Wallet instance status list reference
+      operationId: submitTokenInfo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenInfo'
+      responses:
+        '201':
+          description: Token information successfully submitted
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /pid-master-token/{tokenID}/lifecycle/status:
+    get:
+      description: |
+        Retrieves the lifecycle status of a PID Master Token by its tokenID.
+        The status can be either VALID or INVALID.
+      operationId: getTokenStatus
+      parameters:
+        - name: tokenID
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier for the Token
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Token status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenStatus'
+        '400':
+          description: Invalid tokenID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Lifecycle for tokenID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+security:
+  - ApiKeyAuth: []
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: API key for authentication
+  schemas:
+    TokenInfo:
+      type: object
+      required:
+        - tokenID
+        - expiration
+        - pseudonym
+        # statusListRef is optional for now, but will become required later
+      properties:
+        tokenID:
+          type: string
+          description: Unique identifier for the Token
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        expiration:
+          type: string
+          format: date-time
+          description: Expiration date and time of the token in ISO 8601 format
+          example: "2026-12-31T23:59:59Z"
+        pseudonym:
+          type: string
+          description: Pseudonym associated with the token
+          example: "user_12345"
+        statusListRef:
+          type: object
+          description: Wallet instance status list reference associated with the PID Master Token
+          required:
+            - uri
+            - index
+          properties:
+            uri:
+              type: string
+              format: uri
+              description: Status list URI
+            index:
+              type: integer
+              description: Index in the status list
+              example: 15
+    TokenStatus:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [VALID, INVALID]
+          description: Lifecycle status of the token
+          example: "VALID"
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Invalid token ID format"
+        details:
+          type: string
+          example: "Token ID must be a valid UUID"

@@ -1,0 +1,87 @@
+#
+# Copyright 2024-2026 Bundesdruckerei GmbH
+# For the license see the accompanying file LICENSE.MD.
+#
+
+openapi: 3.0.3
+info:
+  x-api-id: 3ce551ac-d044-4da9-8141-f53b3aeae3b0
+  x-audience: component-internal
+  title: Wallet status list synchronization API
+  description: API for triggering the synchronization of wallet status lists
+  version: 0.1.0
+
+paths:
+  /wallet-status-list/synchronization:
+    post:
+      summary: Start a new wallet status list synchronization
+      description: |
+        Starts a new synchronization of wallet status lists.
+        A new verificationRunID will be generated and returned in the response.
+      operationId: startWalletStatusListSync
+      responses:
+        '201':
+          description: Wallet status list synchronization successfully started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncResponse'
+  /wallet-status-list/synchronization/{verificationRunID}:
+    post:
+      summary: Restart an existing wallet status list synchronization
+      description: |
+        Restarts an existing synchronization of wallet status lists using the specified verificationRunID.
+      operationId: restartWalletStatusListSync
+      parameters:
+        - name: verificationRunID
+          in: path
+          required: true
+          description: Unique identifier for the Verification Run ID to restart
+          schema:
+            type: integer
+            format: int64
+          example: 123456789
+      responses:
+        '201':
+          description: Wallet status list synchronization successfully restarted
+        '400':
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Verification Run ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+security:
+  - ApiKeyAuth: []
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: API key for authentication
+  schemas:
+    SyncResponse:
+      type: object
+      required:
+        - verificationRunID
+      properties:
+        verificationRunID:
+          type: integer
+          format: int64
+          description: Unique identifier for the Verification Run ID
+          example: 123456789
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Invalid Verification Run ID"
+        details:
+          type: string
+          example: "Verification Run ID must be a valid integer or does not exist"

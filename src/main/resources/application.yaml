@@ -1,0 +1,66 @@
+#
+# Copyright 2024-2026 Bundesdruckerei GmbH
+# For the license see the accompanying file LICENSE.MD.
+#
+
+spring:
+  application:
+    name: revocation-service
+  datasource:
+    url: <DB_URL>
+    username: <DB_USERNAME>
+    password: <DB_PASSWORD>
+    hikari:
+      maximum-pool-size: 3
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        ddl-auto: none
+        boot:
+          allow_jdbc_metadata_access: false
+  sql:
+    init:
+      mode: never
+  docker:
+    compose:
+      skip:
+        in-tests: false
+
+server:
+  servlet:
+    register-default-servlet: false
+  max-http-request-header-size: 16000
+  tomcat:
+    max-http-response-header-size: 16000
+
+management:
+  server:
+    port: 9090
+  endpoint:
+    health:
+      access: read-only
+      probes:
+        enabled: true
+    prometheus:
+      access: read-only
+    loggers:
+      access: read-only
+  endpoints:
+    access.default: none
+    web:
+      exposure:
+        include: 'health, prometheus, loggers'
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+revocation:
+  api-key: <API_KEY>
+  time-tolerance: 30s
+
+statuslistservice:
+  restclient:
+    api-base-path: http://localhost:8085
+    api-key: <API_KEY>
